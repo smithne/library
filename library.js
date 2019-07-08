@@ -17,12 +17,31 @@ function addBookToLibrary(title, author, pages, read) {
     myLibrary.push(book);
 }
 
+function addBookFromForm(title, author, pages, read) {
+    bookForm = document.getElementById("newBookForm");
+    title = bookForm.title.value;
+    author = bookForm.author.value;
+    pages = bookForm.pages.value;
+    read = bookForm.read.value;
+    addBookToLibrary(title, author, pages, read);
+    renderLibrary();
+}
+
 function renderLibrary() {
     let tableID = "libraryTable";
-    let columns = ["title", "author", "pages", "read"];
+    let columns = ["title", "author", "pages", "read", "mark as read", "delete"];
     let containerID = "bookList"
+    // clear existing content before creating the table
+    document.getElementById(containerID).innerHTML = "";
     generateTable(myLibrary, columns, tableID, containerID);
-    
+}
+
+function initializePage() {
+    const showHideBtn = document.getElementById("addBookBtn");
+    showHideBtn.addEventListener('click', showHideBookForm);
+    const newBookFormBtn = document.getElementById("submitNewBook");
+    newBookFormBtn.addEventListener('click', addBookFromForm);
+    renderLibrary();
 }
 
 function generateTable(data, columns, tableID, parentID) {
@@ -49,11 +68,26 @@ function generateTable(data, columns, tableID, parentID) {
         let row = document.createElement("tr");
         for (let j = 0; j < columns.length; j++) {
             let cell = document.createElement("td");
-            let cellText = document.createTextNode(data[i][columns[j]]);
+            let cellText = "";
+
+            if (columns[j] == "mark as read") {
+                cellText = document.createTextNode("Toggle Read/Unread");
+                cell.className += 'readToggleBtn';
+                cell.id = "readToggleBtn_" + i;
+                cell.addEventListener("click", toggleRead);
+            } else if (columns[j] == "delete") {
+                cellText = document.createTextNode("Delete Book");
+                cell.className += 'deleteBtn';
+                cell.id = "deleteBtn_" + i;
+                cell.addEventListener("click", deleteBook);
+            } else {
+                cellText = document.createTextNode(data[i][columns[j]]);
+            }
+            
             cell.appendChild(cellText);
             row.appendChild(cell);
         }
-        
+
         tBody.appendChild(row);
     }
     table.appendChild(tBody);
@@ -63,11 +97,33 @@ function generateTable(data, columns, tableID, parentID) {
     
 }
 
-function generateTHead(tableID, columns) {
-    
+// toggle visibility of the new book form
+function showHideBookForm() {
+    let formDiv = document.getElementById("newBookFormDiv");
+    formDiv.style.display = formDiv.style.display == "none" ? "block" : "none";
 }
 
-console.log(myLibrary);
-addBookToLibrary("The Great Gatsby", "F. Scott Fitzgerald", 218, true);
-console.log(myLibrary);
-renderLibrary();
+// TODO: update this function to take an ID rather than onclick event
+// so that it can be called more generally
+function deleteBook(e) {
+    const removalIndex = e.srcElement.id.split("_")[1];
+    myLibrary.splice(removalIndex,1);
+    renderLibrary();
+}
+
+// TODO: update this function to take an ID rather than onclick event
+// so that it can be called more generally
+function toggleRead(e) {
+    // switch book to read
+    const bookID = e.srcElement.id.split("_")[1];
+    myLibrary[bookID].read = !myLibrary[bookID].read
+    renderLibrary();
+}
+
+// seed library with books
+addBookToLibrary("The Great Gatsby", "F. Scott Fitzgerald", 218, false);
+addBookToLibrary("1984", "George Orwell", 328, true);
+addBookToLibrary("Fahrenheit 451", "Ray Bradbury", 158, true)
+addBookToLibrary("Catch-22", "Joseph Heller", 453, true)
+
+initializePage();
